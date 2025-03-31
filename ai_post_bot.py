@@ -31,12 +31,8 @@ print("Attempting to login with credentials...")
 try:
     bsky.login(username, password)
 except Exception as e:
-    print(f"Login failed, trying to resume session: {e}")
-    try:
-        bsky.resume_session(username, password)
-    except Exception as e:
-        print(f"Resume session failed: {e}")
-        raise
+    print(f"Login failed: {e}")
+    raise
 genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
 
 # List of creative prompts
