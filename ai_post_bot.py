@@ -252,7 +252,8 @@ def get_art_critique(image_data, title, max_chars):
         return critique
     except Exception as e:
         print(f"Error getting art critique: {str(e)}")
-        return None
+        # Return a simple default critique when Gemini fails
+        return "An exploration of form and meaning through artificial intelligence, merging philosophical inquiry with digital artistry."
 
 def post_to_bluesky(image_data, title, model_name, description, critique):
     """Post image to Bluesky"""
@@ -280,7 +281,8 @@ def post_to_bluesky(image_data, title, model_name, description, critique):
         print(f"Debug - Max chars for critique: {max_chars}")
         
         # Get art critique with the calculated character limit
-        critique = get_art_critique(image_data, title, max_chars)
+        if not critique:
+            critique = get_art_critique(image_data, title, max_chars)
         
         if critique:
             print(f"Debug - Critique length: {len(critique)}")
@@ -300,6 +302,7 @@ def post_to_bluesky(image_data, title, model_name, description, critique):
         
     except Exception as e:
         print(f"Error posting to Bluesky: {e}")
+        raise  # Re-raise the exception to ensure the GitHub Action fails properly
 
 def main():
     # Generate a random prompt
@@ -314,12 +317,13 @@ def main():
     image_data = generate_image_sd(image_prompt)
     model_name = "Stable Diffusion"
     
-    if image_data:
-        # Post to Bluesky (critique generation is now handled within post_to_bluesky)
-        print("Posting to Bluesky...")
-        post_to_bluesky(image_data, title, model_name, image_prompt, None)
-    else:
-        print("Failed to generate image")
+    if not image_data:
+        print("Failed to generate image with Stable Diffusion, exiting...")
+        raise Exception("Image generation failed")
+        
+    # Post to Bluesky (critique generation is now handled within post_to_bluesky)
+    print("Posting to Bluesky...")
+    post_to_bluesky(image_data, title, model_name, image_prompt, None)
 
 if __name__ == "__main__":
     main()
