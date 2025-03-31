@@ -304,6 +304,19 @@ def post_to_bluesky(image_data, title, model_name, description, critique):
         print(f"Error posting to Bluesky: {e}")
         raise  # Re-raise the exception to ensure the GitHub Action fails properly
 
+def get_test_image():
+    """Generate a simple test image when other image generation methods fail"""
+    try:
+        # Use a placeholder image URL
+        test_image_url = "https://picsum.photos/768/768"  # Random image from Lorem Picsum
+        response = requests.get(test_image_url)
+        if response.status_code == 200:
+            return BytesIO(response.content)
+        return None
+    except Exception as e:
+        print(f"Error getting test image: {e}")
+        return None
+
 def main():
     # Generate a random prompt
     print("Generating prompt...")
@@ -311,14 +324,20 @@ def main():
     print(f"Generated title: {title}")
     print(f"Generated image prompt: {image_prompt}")
     
-    # Generate the image using Stable Diffusion
+    # Try to generate image with Stable Diffusion
     print("Generating image...")
     print("Using Stable Diffusion via Hugging Face...")
     image_data = generate_image_sd(image_prompt)
     model_name = "Stable Diffusion"
     
+    # If Stable Diffusion fails, use test image
     if not image_data:
-        print("Failed to generate image with Stable Diffusion, exiting...")
+        print("Failed to generate image with Stable Diffusion, using test image...")
+        image_data = get_test_image()
+        model_name = "Test Image"
+        
+    if not image_data:
+        print("Failed to get any image, exiting...")
         raise Exception("Image generation failed")
         
     # Post to Bluesky (critique generation is now handled within post_to_bluesky)
